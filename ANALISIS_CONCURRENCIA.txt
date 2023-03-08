@@ -1,0 +1,6 @@
+La primera condición de carrera es que dos hilos intenten modificar de alguna manera la lista (ya sea adicionando o accediendo a algún elemento) al mismo tiempo
+Esto lo solucionamos modificando el HashMap en InMemoryBlueprintPersistence por un ConcurrentHashMap, el cual limita las modificaciones múltiples.
+
+La segunda condición de carrera, es que se acceda a algún plano, y este se intente modificar o acceder al mismo tiempo que otro está trabajando con dicho plano.
+Por lo cual, en cada uno de los métodos de los servicios (InMemoryBlueprintPersistence), vamos a bloquear el acceso múltiple por medio de syncronized, pero de planos específicos, con el fin
+de no limitar la eficiencia de la aplicación
