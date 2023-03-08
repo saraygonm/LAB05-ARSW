@@ -1,0 +1,11 @@
+**Condiciones de carrera:
+Puede ocurrir que durante una inserción, despues se realice una consulta, pero esta segunda ocurra antes, devolviendo datos erroneos.
+
+Varias inserciones que ocurren casi al mismo tiempo, puedan que al momento de guardar un plano esto no ocurra, dando informacion incorrecta al momento de consultarlos.
+
+**Regiones criticas:
+Las operaciones de consultar y guardar planos en la API servicios son concideradas como regiones criticas.
+
+Solución 
+El metodo para guardar planos se sincronizara ya que esta es la unica manerda de solucionar uno de los problemas anteriormente descritos.
+Para solucionar el metodo de consulta se podria un metodo de actualizar para que no hubiera tanta carga en espera del sistema.
