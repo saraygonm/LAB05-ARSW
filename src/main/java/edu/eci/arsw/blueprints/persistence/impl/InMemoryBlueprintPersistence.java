@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,7 +32,7 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     @Qualifier("RedundanceFilter")
     private Filter filter;
 
-    private final Map<Tuple<String,String>,Blueprint> blueprints=new HashMap<>();
+    private final Map<Tuple<String,String>,Blueprint> blueprints=new ConcurrentHashMap<>();
 
     public InMemoryBlueprintPersistence() {
         //load stub data
@@ -75,40 +76,53 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     @Override
     public Blueprint getBlueprint(String author, String bprintname) throws BlueprintNotFoundException {
         Blueprint bp= blueprints.get(new Tuple<>(author, bprintname));
-        if (bp==null){
-            throw new BlueprintNotFoundException("Blueprint no se pudo encontrar");
-        }
 
-        filter.filter(bp);
-        return bp;
+        synchronized(bp) {
+            if (bp==null){
+                throw new BlueprintNotFoundException("Blueprint no se pudo encontrar");
+            }
+    
+            filter.filter(bp);
+            return bp;
+        }
+        
     }
 
     @Override
     public Set<Blueprint> getBlueprintsByAuthor(String author) throws BlueprintNotFoundException {
         Set<Tuple<String, String>> keys = blueprints.keySet();
         HashSet bps = new HashSet();
-        for (Tuple t : keys){
-            if (author.equals(t.o1)){
-                bps.add(blueprints.get(new Tuple<>(author,(String)t.o2)));
+        synchronized(keys) {
+            for (Tuple t : keys){
+                if (author.equals(t.o1)){
+                    bps.add(blueprints.get(new Tuple<>(author,(String)t.o2)));
+                }
             }
+            if(bps.isEmpty()){
+                throw new BlueprintNotFoundException("El autor: " + author + " No existe");
+            }
+            return bps; 
         }
-        if(bps.isEmpty()){
-            throw new BlueprintNotFoundException("El autor: " + author + " No existe");
-        }
-        return bps; 
+        
     }
 
     @Override
     public Set<Blueprint> getAllBlueprints() throws BlueprintNotFoundException {
         Set<Tuple<String, String>> keys=blueprints.keySet();
         HashSet bps=new HashSet();
-        for (Tuple t : keys){
-            bps.add(blueprints.get(new Tuple<>((String)t.o1,(String)t.o2)));
-            Blueprint bp = blueprints.get(new Tuple<>((String)t.o1,(String)t.o2));
-            filter.filter(bp);
-            bps.add(bp);
+        synchronized(keys) {
+            for (Tuple t : keys){
+                bps.add(blueprints.get(new Tuple<>((String)t.o1,(String)t.o2)));
+                Blueprint bp = blueprints.get(new Tuple<>((String)t.o1,(String)t.o2));
+
+                synchronized(bp) {
+                    filter.filter(bp);
+                    bps.add(bp);
+                }
+
+            }
+            return bps;
         }
-        return bps;
     }
 
     
