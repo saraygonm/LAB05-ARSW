@@ -1,7 +1,8 @@
 ### Escuela Colombiana de Ingeniería
 
 ### Arquitecturas de Software
-
+#### AUTORA:
+- [Saray Alieth Mendivelso](https://github.com/saraygonm)
 
 
 #### API REST para la gestión de planos.
@@ -23,8 +24,17 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 ### Parte I
 
 1. Integre al proyecto base suministrado los Beans desarrollados en el ejercicio anterior. Sólo copie las clases, NO los archivos de configuración. Rectifique que se tenga correctamente configurado el esquema de inyección de dependencias con las anotaciones @Service y @Autowired.
+- Se han creado y organizado las carpetas necesarias en el proyecto base, y se integraron los Beans desarrollados previamente, copiando únicamente las clases y manteniendo la estructura de paquetes.
+
+<p align="center">
+<img src="img/media/part1.png" alt="Hilo CountThread" width="700px">
+</p>
 
 2. Modifique el bean de persistecia 'InMemoryBlueprintPersistence' para que por defecto se inicialice con al menos otros tres planos, y con dos asociados a un mismo autor.
+
+<p align="center">
+<img src="img/media/part1.2.png" alt="Hilo CountThread" width="700px">
+</p>
 
 3. Configure su aplicación para que ofrezca el recurso "/blueprints", de manera que cuando se le haga una petición GET, retorne -en formato jSON- el conjunto de todos los planos. Para esto:
 
@@ -49,6 +59,14 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 
 	```
 	* Haga que en esta misma clase se inyecte el bean de tipo BlueprintServices (al cual, a su vez, se le inyectarán sus dependencias de persisntecia y de filtrado de puntos).
+
+- La clase BlueprintAPIController se convierte en un punto de entrada para el manejo de solicitudes HTTP relacionadas con los blueprints.
+- La inyección de dependencia asegura que el controlador tenga acceso al servicio necesario (BlueprintsServices)
+- La anotación de ruta organiza cómo se accede a los recursos dentro del API.
+
+<p align="center">
+<img src="img/media/part1.3.png" alt="Hilo CountThread" width="700px">
+</p>
 
 4. Verifique el funcionamiento de a aplicación lanzando la aplicación con maven:
 
