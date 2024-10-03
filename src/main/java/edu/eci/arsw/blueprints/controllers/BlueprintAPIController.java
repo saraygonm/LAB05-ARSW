@@ -17,11 +17,15 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping(value = "/blueprints")
+
 public class BlueprintAPIController {
 
     @Autowired
     private BlueprintsServices bs;
 
+    /**
+     *  Manejo de solicitudes HTTP GET que intentan obtener todos los blueprints almacenados en el sistema.
+     */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllBlueprints() {
         try {
@@ -32,6 +36,11 @@ public class BlueprintAPIController {
             return new ResponseEntity<>("Error al obtener los blueprints", HttpStatus.NOT_FOUND);
         }
     }
+
+    /**
+     *  Recuperar todos los blueprints creados por un autor específico, y maneja de forma adecuada
+     *  la posibilidad de que el autor no tenga blueprints almacenados
+     */
 
     @GetMapping(path = "/{author}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBlueprintsByAuthor(@PathVariable String author) {
@@ -44,6 +53,10 @@ public class BlueprintAPIController {
         }
     }
 
+    /**
+     *   Este métdo proporciona un endpoint para recuperar un blueprint específico basándose en el autor y el nombre.
+     *   Maneja adecuadamente los errores si el recurso no es encontrado
+     */
     @GetMapping(path = "/{author}/{bpname}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBlueprintByAuthorAndName(@PathVariable String author, @PathVariable String bpname) {
         try {
@@ -55,6 +68,13 @@ public class BlueprintAPIController {
         }
     }
 
+
+
+    /**
+     *
+     * Metodo que proporciona un endpoint REST que permite a los clientes buscar un blueprint por su autor y nombre,
+     * manejando adecuadamente los errores si el recurso no es encontrado.
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addBlueprint(@RequestBody Blueprint blueprint) {
         try {

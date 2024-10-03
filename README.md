@@ -56,7 +56,7 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
             return new ResponseEntity<>("Error bla bla bla",HttpStatus.NOT_FOUND);
         }        
 	}
-
+ 
 	```
 	* Haga que en esta misma clase se inyecte el bean de tipo BlueprintServices (al cual, a su vez, se le inyectarán sus dependencias de persisntecia y de filtrado de puntos).
 
@@ -75,14 +75,63 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 	$ mvn spring-boot:run
 	
 	```
-	Y luego enviando una petición GET a: http://localhost:8080/blueprints. Rectifique que, como respuesta, se obtenga un objeto jSON con una lista que contenga el detalle de los planos suministados por defecto, y que se haya aplicado el filtrado de puntos correspondiente.
+ 
+-mvn Compile: Funcionamiento exitoso
+ <p align="center">
+<img src="img/media/par1.4.png" alt="" width="700px">
+</p>
 
+-mvn spring-boot:run
+
+<p align="center">
+<img src="img/media/part1.4.2.png" alt="Hilo CountThread" width="700px">
+</p>
+
+Y luego enviando una petición GET a: http://localhost:8080/blueprints. Rectifique que, como respuesta, se obtenga un objeto jSON con una lista que contenga el detalle de los planos suministados por defecto, y que se haya aplicado el filtrado de puntos correspondiente.
+
+<p align="center">
+<img src="img/media/parte1.png" alt="" width="700px">
+</p>
 
 5. Modifique el controlador para que ahora, acepte peticiones GET al recurso /blueprints/{author}, el cual retorne usando una representación jSON todos los planos realizados por el autor cuyo nombre sea {author}. Si no existe dicho autor, se debe responder con el código de error HTTP 404. Para esto, revise en [la documentación de Spring](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html), sección 22.3.2, el uso de @PathVariable. De nuevo, verifique que al hacer una petición GET -por ejemplo- a recurso http://localhost:8080/blueprints/juan, se obtenga en formato jSON el conjunto de planos asociados al autor 'juan' (ajuste esto a los nombres de autor usados en el punto 2).
 
+### código:
+
+<p align="center">
+<img src="img/media/part1.5.png" alt="" width="700px">
+</p>
+
+### vizualización:
+
+<p align="center">
+<img src="img/media/part1.5.2.png" alt="" width="700px">
+</p>
+
+### Caso de error:
+
+<p align="center">
+<img src="img/media/part1.5.3.png" alt="" width="700px">
+</p>
+
 6. Modifique el controlador para que ahora, acepte peticiones GET al recurso /blueprints/{author}/{bpname}, el cual retorne usando una representación jSON sólo UN plano, en este caso el realizado por {author} y cuyo nombre sea {bpname}. De nuevo, si no existe dicho autor, se debe responder con el código de error HTTP 404. 
 
+### código:
 
+<p align="center">
+<img src="img/media/part1.6.png" alt="" width="700px">
+</p>
+
+### vizualización:
+
+<p align="center">
+<img src="img/media/part1.6.2.png" alt="" width="700px">
+</p>
+
+### Caso de error:
+
+<p align="center">
+<img src="img/media/part1.6.3.png" alt="" width="700px">
+</p>
 
 ### Parte II
 
@@ -100,8 +149,11 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
         }        
  	
 	}
-	```	
+	```
 
+<p align="center">
+<img src="img/media/part2.png" alt="" width="700px">
+</p>
 
 2.  Para probar que el recurso ‘planos’ acepta e interpreta
     correctamente las peticiones POST, use el comando curl de Unix. Este
@@ -120,21 +172,48 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 	Nota: puede basarse en el formato jSON mostrado en el navegador al consultar una orden con el método GET.
 
 
+
+<p align="center">
+<img src="img/media/parte2.3.png" alt="" width="500px">
+</p>
+
 3. Teniendo en cuenta el autor y numbre del plano registrado, verifique que el mismo se pueda obtener mediante una petición GET al recurso '/blueprints/{author}/{bpname}' correspondiente.
+<p align="center">
+<img src="img/media/part2.4.png" alt="" width="500px">
+</p>
+
 
 4. Agregue soporte al verbo PUT para los recursos de la forma '/blueprints/{author}/{bpname}', de manera que sea posible actualizar un plano determinado.
+
+<p align="center">
+<img src="img/media/part2.5.png" alt="" width="500px">
+</p>
 
 
 ### Parte III
 
 El componente BlueprintsRESTAPI funcionará en un entorno concurrente. Es decir, atederá múltiples peticiones simultáneamente (con el stack de aplicaciones usado, dichas peticiones se atenderán por defecto a través múltiples de hilos). Dado lo anterior, debe hacer una revisión de su API (una vez funcione), e identificar:
 
-* Qué condiciones de carrera se podrían presentar?
-* Cuales son las respectivas regiones críticas?
 
-Ajuste el código para suprimir las condiciones de carrera. Tengan en cuenta que simplemente sincronizar el acceso a las operaciones de persistencia/consulta DEGRADARÁ SIGNIFICATIVAMENTE el desempeño de API, por lo cual se deben buscar estrategias alternativas.
+Modificación durante una consulta: Si se modifica un plano mientras otro hilo lo está consultando, puede producirse una inconsistencia en los datos.
+Agregado durante una consulta: Al agregar un nuevo plano mientras se intenta consultar la colección, se puede generar un comportamiento no deseado.
 
-Escriba su análisis y la solución aplicada en el archivo ANALISIS_CONCURRENCIA.txt
+1. **¿Qué condiciones de carrera se podrían presentar?**
+
+   Las **condiciones de carrera** que se podrían presentar ocurren cuando múltiples hilos acceden al **HashMap** que almacena los planos de forma simultánea, sin una sincronización adecuada. Algunas situaciones comunes incluyen:
+
+	- **Consulta mientras otro hilo modifica**: Si un hilo está **consultando** un plano mientras otro hilo lo está **modificando**, puede resultar en datos inconsistentes, ya que el plano puede estar en un estado intermedio.
+	- **Inserción mientras se consulta**: Si se **agrega** un nuevo plano mientras otro hilo está realizando una **consulta** a la colección, puede que la consulta no refleje el nuevo plano o se produzca un error.
+	- **Eliminación durante la consulta o modificación**: Si un hilo **elimina** un plano mientras otro hilo lo está **modificando** o **leyendo**, puede haber una falla, como una excepción de tipo `NullPointerException`.
+
+2. **¿Cuáles son las respectivas regiones críticas?**
+
+   Las **regiones críticas** son aquellas secciones del código donde se accede al **HashMap** para realizar operaciones de lectura o escritura, las cuales pueden producir inconsistencias si no se controlan adecuadamente:
+
+	- **Lectura del HashMap**: Cada vez que se realiza una operación de **consulta** para obtener un plano de la colección, ya sea individualmente o en conjunto, esa operación es crítica si otro hilo está modificando la colección al mismo tiempo.
+	- **Inserción en el HashMap**: Cuando se **agrega** un nuevo plano a la colección, esto es una región crítica, ya que otro hilo podría estar intentando leer los planos simultáneamente.
+	- **Modificación de un Plano Existente**: Al realizar una **actualización** sobre un plano ya almacenado, se debe garantizar que ningún otro hilo esté leyendo o escribiendo al mismo tiempo, para evitar inconsistencias.
+	- **Eliminación del HashMap**: Si se **elimina** un plano de la colección, esto es una región crítica, ya que otro hilo podría estar accediendo al mismo plano para modificarlo o leerlo.
 
 #### Criterios de evaluación
 
